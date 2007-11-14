@@ -12,28 +12,28 @@ use warnings;
 use fields qw(_run _magic _number _parent _leader _max _node);
 
 sub new ($%) {
-    my($class,%args) = @_;
+    my $class = shift;
+    # Default values first, then the provided parameters
+    my %args = (_run => 0,        # Corresponds to I(v)
+                _magic => 0,      # Corresponds to A_v
+                _max => 0,        # Maximum number assigned to subtree
+                _number => 0,     # The DFS number assigned to this node
+                _parent => undef, # The parent node data for this node
+                _leader => undef, # The leader node data for this node
+                _node => undef,   # The node that the data is for
+                @_);
 
-    my Algorithm::Tree::NCA::Data $self 
-	= fields::phash(
-	    _run => 0,		# Corresponds to I(v)
-	    _magic => 0,	# Corresponds to A_v
-	    _max => 0,		# Maximum number assigned to subtree
-	    _number => 0,	# The DFS number assigned to this node
-	    _parent => undef,	# The parent node data for this node
-	    _leader => undef,	# The leader node data for this node
-	    _node => undef,	# The node that the data is for
-	    %args);
-
-    bless $self, $class;
+    my $self = fields::new($class);
+    @$self{keys %args} = values %args;
     return $self;
 }
 
 package Algorithm::Tree::NCA;
 
-use 5.006;
 use strict;
 use warnings;
+
+use Data::Dumper;
 
 require Exporter;
 
@@ -45,7 +45,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = ();
 our @EXPORT = ();
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # Preloaded methods go here.
 
@@ -70,13 +70,12 @@ sub new ($%) {
     $o{-get} = \&_get_method unless defined $o{-get};
     $o{-set} = \&_set_method unless defined $o{-set};
 
-    my Algorithm::Tree::NCA $self
-	= fields::phash(
-	    _get => $o{'-get'}, # Get method to use
-	    _set => $o{'-set'}, # Set method to use
-	    _data => []);	# Array of node data
+    my $self = fields::new($class);
 
-    bless $self, $class;
+    $self->{_get} = $o{'-get'}; # Get method to use
+    $self->{_set} = $o{'-set'}; # Set method to use
+    $self->{_data} = [];	# Array of node data
+
 
     # Preprocess the tree if there is one supplied
     $self->preprocess($o{-tree}) if exists $o{-tree};
